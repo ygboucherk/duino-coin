@@ -47,6 +47,11 @@ void loop() {
     Serial.flush(); // Clear serial buffer
     String hash = Serial.readStringUntil('\n'); // Read hash
     String job = Serial.readStringUntil('\n'); // Read job
+    if ((job == "start") || (hash == "start")) {
+      Serial.flush(); // Clear serial buffer
+      String hash = Serial.readStringUntil('\n'); // Read hash
+      String job = Serial.readStringUntil('\n'); // Read job
+    }
     unsigned int diff = Serial.parseInt() * 100 + 1; // Read difficulty
     unsigned long StartTime = micros(); // Start time measurement
     #ifdef REVERSE_SEARCH
