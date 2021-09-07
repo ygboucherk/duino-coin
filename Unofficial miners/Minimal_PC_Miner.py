@@ -1,37 +1,136 @@
 #!/usr/bin/env python3
-# Minimal version of Duino-Coin PC Miner, useful for developing own apps. Created by revox 2020
-import socket, hashlib, urllib.request # Only python3 included libraries
-soc = socket.socket()
+# Minimal version of Duino-Coin PC Miner, useful for developing own apps.
+# Created by revox 2020-2021
+# Modifications made by Robert Furr (robtech21) and YeahNotSewerSide
 
-username = "your username here"
+import hashlib
+import os
+import socket
+import sys  # Only python3 included libraries
+import time
+import ssl
+import select
 
-# This sections grabs pool adress and port from Duino-Coin GitHub file
-serverip = "https://raw.githubusercontent.com/revoxhere/duino-coin/gh-pages/serverip.txt" # Serverip file
-with urllib.request.urlopen(serverip) as content:
-    content = content.read().decode().splitlines() #Read content and split into lines
-pool_address = content[0] #Line 1 = pool address
-pool_port = content[1] #Line 2 = pool port
+AVAILABLE_PORTS = [2812, 2813, 2814, 2815, 2816]
+soc = None
 
-# This section connects and logs user to the server
-soc.connect((str(pool_address), int(pool_port))) # Connect to the server
-server_version = soc.recv(3).decode() # Get server version
-print("Server is on version", server_version)
+username = input('Username?\n> ')
+diff_choice = input(
+    'Use lower difficulty? (Y/N) [Leave empty for default of True]\n> ')
+if diff_choice.lower == "n":
+    UseLowerDiff = False
+else:
+    UseLowerDiff = True
 
-# Mining section
+
+def get_fastest_connection(server_ip: str):
+    connection_pool = []
+    available_connections = []
+    for i in range(len(AVAILABLE_PORTS)):
+        connection_pool.append(socket.socket())
+        connection_pool[i].setblocking(0)
+        try:
+            connection_pool[i].connect((server_ip,
+                                        AVAILABLE_PORTS[i]))
+        except BlockingIOError as e:
+            pass
+
+    ready_connections, _, __ = select.select(connection_pool, [], [])
+
+    while True:
+        for connection in ready_connections:
+            try:
+                server_version = connection.recv(100)
+            except:
+                continue
+            if server_version == b'':
+                continue
+
+            available_connections.append(connection)
+            connection.send(b'PING')
+
+        ready_connections, _, __ = select.select(available_connections, [], [])
+        ready_connections[0].recv(100)
+        ready_connections[0].settimeout(10)
+        return ready_connections[0]
+
+
 while True:
-    soc.send(bytes("JOB,"+str(username), encoding="utf8")) # Send job request
-    job = soc.recv(1024).decode() # Get work from pool
-    job = job.split(",") # Split received data to job (job and difficulty)
-    difficulty = job[2]
+    try:
+        print('Searching for fastest connection to the server')
+        soc = get_fastest_connection(str("server.duinocoin.com"))
+        print('Fastest connection found')
 
-    for result in range(100 * int(difficulty) + 1): # Calculate hash with difficulty
-        ducos1 = hashlib.sha1(str(job[0] + str(result)).encode("utf-8")).hexdigest() # Generate hash
-        if job[1] == ducos1: # If result is even with job
-            soc.send(bytes(str(result), encoding="utf8")) # Send result of hashing algorithm to pool
-            feedback = soc.recv(1024).decode() # Get feedback about the result
-            if feedback == "GOOD": # If result was good
-                print("Accepted share", result, "Difficulty", difficulty)
-                break
-            elif feedback == "BAD": # If result was bad
-                print("Rejected share", result, "Difficulty", difficulty)
-                break
+        # Mining section
+        while True:
+            if UseLowerDiff:
+                # Send job request for lower diff
+                soc.send(bytes(
+                    "JOB,"
+                    + str(username)
+                    + ",MEDIUM",
+                    encoding="utf8"))
+            else:
+                # Send job request
+                soc.send(bytes(
+                    "JOB,"
+                    + str(username),
+                    encoding="utf8"))
+
+            # Receive work
+            job = soc.recv(1024).decode().rstrip("\n")
+            # Split received data to job and difficulty
+            job = job.split(",")
+            difficulty = job[2]
+
+            hashingStartTime = time.time()
+            base_hash = hashlib.sha1(str(job[0]).encode('ascii'))
+            temp_hash = None
+
+            for result in range(100 * int(difficulty) + 1):
+                # Calculate hash with difficulty
+                temp_hash = base_hash.copy()
+                temp_hash.update(str(result).encode('ascii'))
+                ducos1 = temp_hash.hexdigest()
+
+                # If hash is even with expected hash result
+                if job[1] == ducos1:
+                    hashingStopTime = time.time()
+                    timeDifference = hashingStopTime - hashingStartTime
+                    hashrate = result / timeDifference
+
+                    # Send numeric result to the server
+                    soc.send(bytes(
+                        str(result)
+                        + ","
+                        + str(hashrate)
+                        + ",Minimal_PC_Miner",
+                        encoding="utf8"))
+
+                    # Get feedback about the result
+                    feedback = soc.recv(1024).decode().rstrip("\n")
+                    # If result was good
+                    if feedback == "GOOD":
+                        print("Accepted share",
+                              result,
+                              "Hashrate",
+                              int(hashrate/1000),
+                              "kH/s",
+                              "Difficulty",
+                              difficulty)
+                        break
+                    # If result was incorrect
+                    elif feedback == "BAD":
+                        print("Rejected share",
+                              result,
+                              "Hashrate",
+                              int(hashrate/1000),
+                              "kH/s",
+                              "Difficulty",
+                              difficulty)
+                        break
+
+    except Exception as e:
+        print("Error occured: " + str(e) + ", restarting in 5s.")
+        time.sleep(5)
+        os.execl(sys.executable, sys.executable, *sys.argv)

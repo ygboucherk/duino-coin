@@ -1,79 +1,131 @@
-//////////////////////////////////////////////////////////
-//  _____        _                    _____      _
-// |  __ \      (_)                  / ____|    (_)
-// | |  | |_   _ _ _ __   ___ ______| |     ___  _ _ __
-// | |  | | | | | | '_ \ / _ \______| |    / _ \| | '_ \ 
-// | |__| | |_| | | | | | (_) |     | |___| (_) | | | | |
-// |_____/ \__,_|_|_| |_|\___/       \_____\___/|_|_| |_|
-//  Code for Arduino boards v1.7 
-//  © Duino-Coin Community 2019-2020
-//
-//  Big thanks to JoyBed for optimizations!
-//  Thanks to daknuett for help in library migration!
-//  Distributed under MIT License
-//////////////////////////////////////////////////////////
-//  https://github.com/revoxhere/duino-coin - GitHub
-//  https://duinocoin.com - Official Website
-//  https://discord.gg/k48Ht5y - Discord
-//  https://github.com/revoxhere - @revox
-//  https://github.com/daknuett - @daknuett
-//  https://github.com/JoyBed - @JoyBed
-//////////////////////////////////////////////////////////
-//  If you don't know what to do, visit official website
-//  and navigate to Getting Started page. Happy mining!
-//////////////////////////////////////////////////////////
+/*
+  ,------.          ,--.                       ,-----.       ,--.         
+  |  .-.  \ ,--.,--.`--',--,--,  ,---. ,-----.'  .--./ ,---. `--',--,--,  
+  |  |  \  :|  ||  |,--.|      \| .-. |'-----'|  |    | .-. |,--.|      \ 
+  |  '--'  /'  ''  '|  ||  ||  |' '-' '       '  '--'\' '-' '|  ||  ||  | 
+  `-------'  `----' `--'`--''--' `---'         `-----' `---' `--'`--''--' 
+  Official code for Arduino boards                            version 2.7
+  
+  Duino-Coin Team & Community 2019-2021 © MIT Licensed
+  https://duinocoin.com
+  https://github.com/revoxhere/duino-coin
+  If you don't know where to start, visit official website and navigate to
+  the Getting Started page. Have fun mining!
+*/
 
-//If defined, the count is reversed. This allows you to not repeat searching the same numbers twice if you have an arduino searching the conventional way.
-//#define REVERSE_SEARCH
-
-// Include SHA1 part of cryptosuite2 library
+#ifndef LED_BUILTIN
+#define LED_BUILTIN 13
+#endif
+/* For 8-bit microcontrollers we should use 16 bit variables since the
+difficulty is low, for all the other cases should be 32 bits. */
+#if defined(ARDUINO_ARCH_AVR) || defined(ARDUINO_ARCH_MEGAAVR)
+typedef uint16_t uintDiff;
+#else
+typedef uint32_t uintDiff;
+#endif
+// Arduino identifier library - https://github.com/ricaun
+#include "uniqueID.h"
 #include "sha1.h"
 
-String result; // Create globals
-char buffer[64] = "";
-unsigned int iJob = 0;
+// Create globals
+String lastblockhash = "";
+String newblockhash = "";
+String DUCOID = "";
+uintDiff difficulty = 0;
+uintDiff ducos1result = 0;
+// 40+40+20+3 is the maximum size of a job
+const uint16_t job_maxsize = 104;  
+uint8_t job[job_maxsize];
 
 void setup() {
-  pinMode(LED_BUILTIN, OUTPUT); // Prepare built-in led pin as output
-  Serial.begin(115200); // Open serial port
-  Serial.println("ready"); // Send start word to miner program
+  // Prepare built-in led pin as output
+  pinMode(LED_BUILTIN, OUTPUT);
+  DUCOID = get_DUCOID();
+  // Open serial port
+  Serial.begin(115200);
+  Serial.setTimeout(10000);
+  while (!Serial)
+    ;  // For Arduino Leonardo or any board with the ATmega32U4
   Serial.flush();
 }
 
-void loop() {
-  String startStr = Serial.readStringUntil('\n');
-  if (startStr == "start") { // Wait for start word, serial.available caused problems
-    Serial.flush();
-    String hash = Serial.readStringUntil('\n'); // Read hash
-    String job = Serial.readStringUntil('\n'); // Read job
-    unsigned int diff = Serial.parseInt() * 100 + 1; // Read difficulty
-    unsigned long StartTime = micros();
-#ifdef REVERSE_SEARCH
-    for (unsigned int iJob = diff; iJob >= 0; iJob--) { // Difficulty loop
-#else
-    for (unsigned int iJob = 0; iJob < diff; iJob++) { // Difficulty loop
-#endif
-      Sha1.init(); // Create sha1 hasher
-      Sha1.print(String(hash) + String(iJob));
-      uint8_t * hash_bytes = Sha1.result(); // Get result
-      for (int i = 0; i < 10; i++) { // Cast result to array
-        for (int i = 0; i < 32; i++) {
-          buffer[2 * i] = "0123456789abcdef"[hash_bytes[i] >> 4]; //MSB to LSB I guess? Depending on the address in hash_bytes,
-                                                                  // it chooses that from the given array of characters
-          buffer[2 * i + 1] = "0123456789abcdef"[hash_bytes[i] & 0xf]; //It retreves the value from that address next spot over
-        }
-      }
-      result = String(buffer); // Convert and prepare array
-      result.remove(40); // First 40 characters are good, rest is garbage
-      if (String(result) == String(job)) { // If result is found
-        unsigned long EndTime = micros();
-        unsigned long ElapsedTime = EndTime - StartTime;
-        Serial.println(String(iJob) + "," + String(ElapsedTime)); // Send result back to the program with share time
-        PORTB = PORTB | B00100000;   // Turn on built-in led
-        delay(75); // Wait a bit
-        PORTB = PORTB & B11011111; // Turn off built-in led
-        break; // Stop and wait for more work
-      }
+// DUCO-S1A hasher
+uintDiff ducos1a(String lastblockhash, String newblockhash,
+                 uintDiff difficulty) {
+  newblockhash.toUpperCase();
+  const char *c = newblockhash.c_str();
+  uint8_t final_len = newblockhash.length() >> 1;
+  for (uint8_t i = 0, j = 0; j < final_len; i += 2, j++)
+    job[j] = ((((c[i] & 0x1F) + 9) % 25) << 4) + ((c[i + 1] & 0x1F) + 9) % 25;
+
+    // Difficulty loop
+  #if defined(ARDUINO_ARCH_AVR) || defined(ARDUINO_ARCH_MEGAAVR)
+    // If the difficulty is too high for AVR architecture then return 0
+    if (difficulty > 655) return 0;
+  #endif
+  for (uintDiff ducos1res = 0; ducos1res < difficulty * 100 + 1; ducos1res++) {
+    Sha1.init();
+    Sha1.print(lastblockhash + String(ducos1res));
+    // Get SHA1 result
+    uint8_t *hash_bytes = Sha1.result();
+    if (memcmp(hash_bytes, job, SHA1_HASH_LEN * sizeof(char)) == 0) {
+      // If expected hash is equal to the found hash, return the result
+      return ducos1res;
     }
+  }
+  return 0;
+}
+
+String get_DUCOID() {
+  String ID = "DUCOID";
+  char buff[4];
+  for (size_t i = 0; i < 8; i++) {
+    sprintf(buff, "%02X", (uint8_t)UniqueID8[i]);
+    ID += buff;
+  }
+  return ID;
+}
+
+void loop() {
+  // Wait for serial data
+  if (Serial.available() > 0) {
+    memset(job, 0, job_maxsize);
+    // Read last block hash
+    lastblockhash = Serial.readStringUntil(',');
+    // Read expected hash
+    newblockhash = Serial.readStringUntil(',');
+    // Read difficulty
+    difficulty = strtoul(Serial.readStringUntil(',').c_str(), NULL, 10);
+    // Clearing the receive buffer reading one job.
+    while (Serial.available()) Serial.read();
+    // Start time measurement
+    uint32_t startTime = micros();
+    // Call DUCO-S1A hasher
+    ducos1result = ducos1a(lastblockhash, newblockhash, difficulty);
+    // Calculate elapsed time
+    uint32_t elapsedTime = micros() - startTime;
+    // Clearing the receive buffer before sending the result.
+    while (Serial.available()) Serial.read();
+    // Send result back to the program with share time
+    Serial.print(String(ducos1result, 2) 
+                 + "," 
+                 + String(elapsedTime, 2) 
+                 + "," 
+                 + String(DUCOID) 
+                 + "\n");
+    // Turn on built-in led
+    #if defined(ARDUINO_ARCH_AVR)
+        PORTB = PORTB | B00100000;
+    #else
+        digitalWrite(LED_BUILTIN, HIGH);
+    #endif
+        // Wait a bit
+        delay(25);
+        // Turn off built-in led
+    #if defined(ARDUINO_ARCH_AVR)
+        PORTB = PORTB & B11011111;
+    #else
+        digitalWrite(LED_BUILTIN, LOW);
+    #endif
   }
 }
