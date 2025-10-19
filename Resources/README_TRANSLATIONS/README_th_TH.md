@@ -1,6 +1,6 @@
 <!--
 *** Official Duino Coin README
-*** by revoxhere, 2019-2021
+*** by revoxhere, 2019-2022
 -->
 
 <a href="https://duinocoin.com">
@@ -28,6 +28,10 @@
     <img src="https://img.shields.io/badge/-%E0%B9%84%E0%B8%97%E0%B8%A2-blue.svg?style=for-the-badge" /></a>
   <a href="https://github.com/revoxhere/duino-coin/blob/master/Resources/README_TRANSLATIONS/README_pt_BR.md">
     <img src="https://img.shields.io/badge/-Portugu%C3%AAs-be2edd.svg?style=for-the-badge" /></a>
+  <a href="https://github.com/revoxhere/duino-coin/blob/master/Resources/README_TRANSLATIONS/README_ja_JP.md">
+    <img src="https://img.shields.io/badge/-日本語-orange?style=for-the-badge" /></a>
+  <a href="https://github.com/revoxhere/duino-coin/blob/master/Resources/README_TRANSLATIONS/README_fi_FI.md">
+    <img src="https://img.shields.io/badge/finnish-121212.svg?style=for-the-badge" /></a>
 </h1>
 <a href="https://wallet.duinocoin.com">
   <img src="https://img.shields.io/badge/Online Wallet-8e44ad.svg?style=for-the-badge&logo=Web" /></a>
@@ -223,11 +227,10 @@ Duino-Coin ส่วนใหญ่ถูกเผยแพร่ภายใต
 *   [@connorhess](https://github.com/connorhess) (หัวน้านักพัฒนาไพธอน, เจ้าของ Node-S)
 *   [@JoyBed](https://github.com/JoyBed) (หัวน้านักพัฒนา AVR)
 <<<<<<< HEAD
-*   [@Tech1k](https://github.com/Tech1k/) - kristian@beyondcoin.io (หัวหน้าเว็บมาสเตอร์ และนักพัฒนา DUCO)
+*   [@Tech1k](https://github.com/Tech1k/) - hello@kristiankramer.net (หัวหน้าเว็บมาสเตอร์ และนักพัฒนา DUCO)
 ##
 *   [@Pripun](https://github.com/Pripun) (นักพัฒนาแอพมือถือ)
 =======
-*   [@Tech1k](https://github.com/Tech1k/) - kristian@beyondcoin.io (เว็บมาสเตอร์)
 ##
 
 *   [@ygboucherk](https://github.com/ygboucherk) ([wDUCO](https://github.com/ygboucherk/wrapped-duino-coin-v2) นักพัฒนา)

@@ -3,7 +3,7 @@
 # Duino-Coin Tkinter GUI Wallet (v2.52)
 # https://github.com/revoxhere/duino-coin
 # Distributed under MIT license
-# © Duino-Coin Community 2019-2021
+# © Duino-Coin Community 2019-2022
 ##########################################
 import sys
 from base64 import b64decode, b64encode
@@ -16,16 +16,15 @@ from os import _exit, execl, mkdir
 from os import name as osname
 from os import path, system
 from pathlib import Path
-from socket import socket
 from sqlite3 import connect as sqlconn
 import subprocess
 from threading import Thread, Timer
 from time import sleep, time
-from tkinter import (BOTH, END, LEFT, RIGHT, Button, Checkbutton, E, Entry,
-                     Frame, IntVar, Label, Listbox, N, PhotoImage, S,
+from tkinter import (END, LEFT, Button, E, Entry,
+                     Frame, Label, Listbox, N, PhotoImage, S,
                      Scrollbar, StringVar, Tk, Toplevel, W, messagebox, ttk)
 from tkinter.font import Font
-from urllib.request import urlopen, urlretrieve
+from urllib.request import urlretrieve
 from webbrowser import open_new_tab
 
 from requests import get
@@ -52,7 +51,7 @@ balance = 0
 unpaid_balance = 0
 profitCheck = 0
 curr_bal = 0
-WS_URI = "wss://server.duinocoin.com:15808"
+WS_URI = "ws://server.duinocoin.com:15808"
 
 
 def install(package):
@@ -167,6 +166,10 @@ def openTransaction(hashToOpen):
 class LoginFrame(Frame):
     def __init__(self, master):
         super().__init__(master)
+        messagebox.showerror(title="Warning",
+                             message=("CLI and GUI wallets are being deprecated in favor of the Web Wallet. "
+                                      + "This app may not run properly."))
+
         master.title("Login")
         master.resizable(False, False)
 
@@ -281,15 +284,15 @@ class LoginFrame(Frame):
 
         if username and password:
             soc = websocket.create_connection(WS_URI)
-            soc.recv()
+            soc.recv().decode()
             soc.send(bytes(
                 "LOGI,"
                 + str(username)
                 + ","
                 + str(password),
                 encoding="utf8"))
-            response = soc.recv().rstrip("\n")
-            response = response.split(",")
+            response = soc.recv().decode()
+            response = response.rstrip("\n").split(",")
 
             if response[0] == "OK":
                 passwordEnc = b64encode(bytes(password, encoding="utf8"))
@@ -320,7 +323,7 @@ class LoginFrame(Frame):
         if emailS and usernameS and passwordS and confpasswordS:
             if passwordS == confpasswordS:
                 soc = websocket.create_connection(WS_URI)
-                soc.recv()
+                soc.recv().decode()
                 soc.send(
                     bytes(
                         "REGI,"
@@ -330,7 +333,7 @@ class LoginFrame(Frame):
                         + ","
                         + str(emailS),
                         encoding="utf8"))
-                response = soc.recv().rstrip("\n")
+                response = soc.recv().decode().rstrip("\n")
                 response = response.split(",")
 
                 if response[0] == "OK":
@@ -1106,7 +1109,7 @@ def wrapper_window(handler):
         print("Got amount:", amount)
         print("pub key:", pub_key)
         soc = websocket.create_connection(WS_URI)
-        soc.recv()
+        soc.recv().decode()
         try:
             float(amount)
         except Exception:
@@ -1118,7 +1121,7 @@ def wrapper_window(handler):
                 + ","
                 + str(password),
                 encoding="utf8"))
-            _ = soc.recv()
+            _ = soc.recv().decode()
             soc.send(
                 bytes(
                     "WRAP,"
@@ -1192,7 +1195,7 @@ def unwrapper_window(handler):
         amount = amountUnWrap.get()
         print("Got amount:", amount)
         soc = websocket.create_connection(WS_URI)
-        soc.recv()
+        soc.recv().decode()
         try:
             float(amount)
         except Exception:
@@ -1203,7 +1206,7 @@ def unwrapper_window(handler):
                 + str(username)
                 + ","
                 + str(password), encoding="utf8"))
-            _ = soc.recv()
+            _ = soc.recv().decode()
             if use_wrapper:
                 pendingvalues = wduco.functions.pendingWithdrawals(
                     pub_key, username)
@@ -1430,14 +1433,14 @@ def settings_window(handler):
                 if oldpasswordS and newpasswordS and confpasswordS:
                     if newpasswordS == confpasswordS:
                         soc = websocket.create_connection(WS_URI)
-                        soc.recv()
+                        soc.recv().decode()
                         soc.send(
                             bytes(
                                 "LOGI,"
                                 + str(username)
                                 + ","
                                 + str(password), encoding="utf8"))
-                        soc.recv()
+                        soc.recv().decode()
                         soc.send(
                             bytes(
                                 "CHGP,"
@@ -1445,7 +1448,7 @@ def settings_window(handler):
                                 + ","
                                 + str(newpasswordS),
                                 encoding="utf8"))
-                        response = soc.recv().rstrip("\n").split(",")
+                        response = soc.recv().decode().rstrip("\n").split(",")
                         soc.close()
 
                         if not "OK" in response[0]:
@@ -1793,18 +1796,18 @@ def get_balance():
     global gtxl
     try:
         soc = websocket.create_connection(WS_URI)
-        soc.recv()
+        soc.recv().decode()
         soc.send(bytes(
             "LOGI,"
             + str(username)
             + ","
             + str(password), encoding="utf8"))
-        _ = soc.recv()
+        _ = soc.recv().decode()
         soc.send(bytes(
             "BALA",
             encoding="utf8"))
         oldbalance = balance
-        balance = float(soc.recv().rstrip("\n"))
+        balance = float(soc.recv().decode().rstrip("\n"))
         global_balance = round(float(balance), 8)
 
         try:
@@ -1812,7 +1815,7 @@ def get_balance():
             soc.send(bytes(
                 "GTXL," + str(username) + ",7",
                 encoding="utf8"))
-            gtxl = str(soc.recv().rstrip(
+            gtxl = str(soc.recv().decode().rstrip(
                 "\n").replace("\'", "\""))
             gtxl = jsonloads(gtxl)
         except Exception as e:
@@ -1964,7 +1967,7 @@ def send_funds_protocol(handler):
         icon="warning",)
     if MsgBox == "yes":
         soc = websocket.create_connection(WS_URI)
-        soc.recv()
+        soc.recv().decode()
 
         soc.send(bytes(
             "LOGI,"
@@ -1972,7 +1975,7 @@ def send_funds_protocol(handler):
             + ","
             + str(password),
             encoding="utf8"))
-        response = soc.recv()
+        response = soc.recv().decode()
         soc.send(
             bytes(
                 "SEND,"
@@ -1982,7 +1985,7 @@ def send_funds_protocol(handler):
                 + ","
                 + str(amountStr),
                 encoding="utf8"))
-        response = soc.recv().rstrip("\n").split(",")
+        response = soc.recv().decode().rstrip("\n").split(",")
         soc.close()
 
         if "OK" in str(response[0]):
@@ -2604,6 +2607,8 @@ try:
         lang = "dutch"
     elif locale.startswith("ru"):
         lang = "russian"
+    elif locale.startswith("uk"):
+        lang = "ukrainian"
     elif locale.startswith("de"):
         lang = "german"
     elif locale.startswith("tr"):
@@ -2612,8 +2617,14 @@ try:
         lang = "italian"
     elif locale.startswith("zh"):
         lang = "chinese_simplified"
+    elif locale.startswith("sk"):
+        lang = "slovak"
     elif locale.startswith("th"):
         lang = "thai"
+    elif locale.startswith("ko"):
+            lang = "korean"
+    elif locale.startswith("fi"):
+            lang = "finnish"
     else:
         lang = "english"
 except IndexError:

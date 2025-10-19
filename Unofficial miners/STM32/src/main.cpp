@@ -1,8 +1,8 @@
 // Duino-coin miner for STM32 and AVR chip family
 // https://duinocoin.com/
 
-// by: pankleks 2021
-// v: 1.1
+// by: pankleks 2022
+// v: 1.2
 // https://github.com/pankleks
 // MIT License
 
@@ -141,7 +141,7 @@ void loop()
     expHash = Serial.readStringUntil(',');
     log("EH: " + expHash);
 
-    difficulty = Serial.readStringUntil(',').toInt();
+    difficulty = Serial.readStringUntil(',').toInt() * 100;
     log("DF: " + String(difficulty));
 
     clearSerial();

@@ -1,6 +1,6 @@
 <!--
 *** Official Duino Coin README
-*** by revoxhere, 2019-2021
+*** by revoxhere, 2019-2022
 -->
 
 <a href="https://duinocoin.com">
@@ -14,6 +14,8 @@
   <br>
   <a href="https://github.com/revoxhere/duino-coin/blob/master/README.md">
     <img src="https://img.shields.io/badge/English-f39c12.svg?style=for-the-badge" /></a>
+  <a href="https://github.com/revoxhere/duino-coin/blob/master/Resources/README_TRANSLATIONS/README_fi_FI.md">
+    <img src="https://img.shields.io/badge/finnish-121212.svg?style=for-the-badge" /></a>
 </h1>
 <a href="https://wallet.duinocoin.com">
   <img src="https://img.shields.io/badge/Online Wallet-8e44ad.svg?style=for-the-badge&logo=Web" /></a>
@@ -212,7 +214,7 @@ Bazı üçüncü-parti dosyalar farklı lisanslar kullanıyor olabilir - lütfen
 *   [@Bilaboz](https://github.com/bilaboz/) (Ana NodeJS geliştiricisi)
 *   [@connorhess](https://github.com/connorhess) (Ana Python geliştiricisi, Node-S sahibi)
 *   [@JoyBed](https://github.com/JoyBed) (Ana AVR geliştiricisi)
-*   [@Tech1k](https://github.com/Tech1k/) - kristian@beyondcoin.io (Lead Webmaster and DUCO Developer) <!-- translation wanted -->
+*   [@Tech1k](https://github.com/Tech1k/) - hello@kristiankramer.net (Lead Webmaster and DUCO Developer) <!-- translation wanted -->
 ##
 *   [@ygboucherk](https://github.com/ygboucherk) ([wDUCO](https://github.com/ygboucherk/wrapped-duino-coin-v2) geliştiricisi)
 *   [@DoctorEenot](https://github.com/DoctorEenot) (Geliştirici)

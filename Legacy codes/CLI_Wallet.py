@@ -3,7 +3,7 @@
 # Duino-Coin CLI Wallet (v2.7.1)
 # https://github.com/revoxhere/duino-coin
 # Distributed under MIT license
-# © Duino-Coin Community 2021
+# © Duino-Coin Community 2022
 ##########################################
 import configparser
 import datetime
@@ -84,6 +84,10 @@ try:
             lang = "dutch"
         elif locale.startswith("th"):
             lang = "thai"
+        elif locale.startswith("sk"):
+            lang = "slovak"
+        elif locale.startswith("ko"):
+            lang = "korean"
         else:
             lang = "english"
     else:
@@ -257,6 +261,9 @@ signal(SIGINT, handler)  # Enable signal handler
 
 
 while True:
+    print(("Warning: CLI and GUI wallets are being deprecated "
+           + "in favor of the Web Wallet. "
+           + "This app may not run properly."))
     try:
         wss_conn = websocket.create_connection(WS_URI)
         SERVER_VER = wss_conn.recv().decode()
@@ -484,7 +491,7 @@ while True:
                         b64decode(
                             config["wallet"]["password"]
                         ).decode("utf8")
-                    ).decode(utf8)
+                    ).decode("utf8")
                 except InvalidToken:
                     print(getString("invalid_passphrase_wrapper"))
                     use_wrapper = False

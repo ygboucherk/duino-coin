@@ -2,6 +2,8 @@
 Wallet_*/
 PCMiner_*/
 AVRMiner_*/
+Duino-Coin PC Miner */
+Duino-Coin AVR Miner */
 
 # Byte-compiled and optimized files
 __pycache__/

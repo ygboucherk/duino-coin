@@ -1,6 +1,6 @@
 <!--
 *** Official Duino Coin README
-*** by revox, 2019-2021
+*** by revox, 2019-2022
 -->
 
 <p align = "center">
@@ -140,7 +140,7 @@ wDUCO to DUCO "zwrapowane" na sieci innej kryptowaluty - Tron. Aktualnie nie ma 
 
 ### Konfiguracja Wrappera wDUCO
 
-1. Otwórz swój GUI (graficzny) or CLI (konsolowy) Portfel DUCO
+1. Otwórz swój GUI (graficzny) lub CLI (konsolowy) Portfel DUCO
 2. Jeżeli używasz portfela GUI:
     1. Otwórz ustawienia
     2. Kliknij na przycisk **Ustawienia Wrappera**
@@ -226,7 +226,7 @@ Niektóre pliki niepochodzące od nas mogą mieć inne licencje - sprawdź ich k
     *   [@LDarki](https://github.com/LDarki) (web deweloper)
     *   [@travelmode](https://github.com/colonelwatch) (deweloper)
     *   [@ygboucherk](https://github.com/ygboucherk) (deweloper [wDUCO](https://github.com/ygboucherk/wrapped-duino-coin-v2))
-    *   [@Tech1k](https://github.com/Tech1k/) - kristian@beyondcoin.io (Lead Webmaster and DUCO Developer) <!-- translation wanted -->
+    *   [@Tech1k](https://github.com/Tech1k/) - hello@kristiankramer.net (Lead Webmaster and DUCO Developer) <!-- translation wanted -->
 
 *   **Współautorzy:**
     *   [@5Q](https://github.com/its5Q)
